@@ -1,0 +1,13 @@
+Karan Gupta
+AI Engineer
+Jaipur, India | karan.gupta@example.com | +91 90000 00198
+
+SKILLS
+Python, PyTorch, TensorFlow, NLP, LLMs, RAG, LangChain, FAISS, Pinecone, Docker, Kubernetes, AWS, GCP, Azure, MLOps, MLflow, FastAPI, SQL, Spark, Kafka, Airflow, React, Node.js, Java, Go, Rust, Terraform
+
+PROFESSIONAL EXPERIENCE
+Intern | Sunrise Traders, Jaipur | Jun 2025 - Aug 2025
+- Updated product spreadsheets and answered customer emails.
+
+EDUCATION
+B.Com, Aravalli College of Commerce, Jaipur | 2022 - 2025

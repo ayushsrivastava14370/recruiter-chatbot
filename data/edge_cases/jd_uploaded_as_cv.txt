@@ -1,0 +1,28 @@
+Job Title: Backend Engineer - Python
+Department: Platform Engineering
+Location: Hyderabad (Hybrid)
+Employment Type: Full-time
+
+ABOUT THE ROLE
+Build the APIs and services that power our analytics platform.
+
+RESPONSIBILITIES
+- Design and build scalable backend services and APIs.
+- Own reliability, performance and observability of your services.
+
+MUST HAVE
+- 4+ years of experience in backend development
+- Python
+- FastAPI
+- PostgreSQL
+- REST APIs
+- Docker
+- Microservices
+
+NICE TO HAVE
+- Kubernetes
+- Redis
+- Kafka
+- AWS
+- CI/CD
+- System design

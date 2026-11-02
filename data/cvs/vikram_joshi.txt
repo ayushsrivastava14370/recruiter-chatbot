@@ -1,0 +1,23 @@
+Vikram Joshi
+Lead Software Engineer (Java)
+Mumbai, India | vikram.joshi@example.com | +91 90000 00107
+
+PROFESSIONAL SUMMARY
+Software engineer with 7 years of experience building Java microservices for banking and insurance.
+
+SKILLS
+Languages: Java, basic Python scripting
+Frameworks: Spring Boot, REST APIs, microservices
+Data & Messaging: MySQL, Kafka
+DevOps & Process: Docker, Jenkins (CI/CD), JUnit, Agile
+
+PROFESSIONAL EXPERIENCE
+Lead Software Engineer | Sterling Bank Technology, Mumbai | May 2021 - Present
+- Lead a team of 6 building Spring Boot microservices for loan origination.
+- Migrated batch jobs to Kafka streaming; containerised services with Docker.
+
+Software Engineer | Infobyte Services, Mumbai | Jun 2018 - Apr 2021
+- Developed REST APIs in Java with MySQL; wrote JUnit tests; Agile/Scrum delivery.
+
+EDUCATION
+B.Tech in Electronics, Konkan College of Engineering, Mumbai | 2014 - 2018

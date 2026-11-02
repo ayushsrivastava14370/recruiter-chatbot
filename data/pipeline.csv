@@ -1,0 +1,13 @@
+candidate_name,applied_role,stage,source,applied_date,last_activity,next_step,next_step_date,recruiter,expected_ctc_lpa,notice_period_days,notes
+Aarav Mehta,Machine Learning Engineer - NLP & LLMs,Technical Interview,Referral,2026-10-05,2026-10-28,Technical round 2,2026-11-05,Priya Sharma,30,60,Scored 88% in assessment; strong RAG experience
+Sara Thomas,Machine Learning Engineer - NLP & LLMs,Assessment Sent,LinkedIn,2026-10-12,2026-10-29,Complete HackerRank test,2026-11-03,Priya Sharma,22,30,"CV-focused profile, limited NLP"
+Rohan Kulkarni,Machine Learning Engineer - NLP & LLMs,HR Screening,Naukri,2026-10-20,2026-10-27,HR screening call,2026-11-04,Rahul Bose,18,60,Interested in moving from insurance domain
+Arjun Desai,Machine Learning Engineer - NLP & LLMs,Technical Interview,Careers Page,2026-10-08,2026-10-30,Technical round 1,2026-11-04,Priya Sharma,24,90,90-day notice; buyout to be discussed
+Fatima Sheikh,Machine Learning Engineer - NLP & LLMs,Applied,Careers Page,2026-10-29,2026-10-29,Application review,2026-11-03,Rahul Bose,8,0,Fresh graduate - consider for future graduate programme
+Neha Iyer,Data Analyst,Offer,LinkedIn,2026-09-22,2026-10-31,Offer discussion call,2026-11-03,Rahul Bose,13,30,Cleared all rounds; hiring manager very positive
+Kabir Singh,Data Analyst,Rejected,Naukri,2026-10-01,2026-10-15,Send rejection email,2026-10-16,Rahul Bose,6,15,Below experience requirement; assessment 48%
+Ishita Banerjee,Data Analyst,Assessment Sent,Referral,2026-10-18,2026-10-30,Take-home case study due,2026-11-01,Rahul Bose,15,60,Strong stakeholder skills; no Power BI
+Ananya Rao,Backend Engineer - Python,Hiring Manager Round,LinkedIn,2026-10-02,2026-10-30,Hiring manager round,2026-11-06,Priya Sharma,27,60,Excellent system design in technical round
+Vikram Joshi,Backend Engineer - Python,On Hold,Referral,2026-10-06,2026-10-21,Await HM decision on Java profile,2026-11-07,Priya Sharma,28,90,Strong Java/Kafka but limited Python
+Meera Nair,Backend Engineer - Python,HR Screening,Careers Page,2026-10-25,2026-10-28,HR screening call,2026-11-05,Rahul Bose,17,30,Full-stack profile; mostly Node.js
+Dev Malhotra,Backend Engineer - Python,Applied,LinkedIn,2026-10-30,2026-10-30,Application review,2026-11-03,Rahul Bose,25,60,Data engineer - could also fit future Data Platform role

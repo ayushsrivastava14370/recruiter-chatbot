@@ -1,0 +1,29 @@
+Job Title: Machine Learning Engineer - NLP & LLMs
+Department: AI Platform
+Location: Bengaluru (Hybrid)
+Employment Type: Full-time
+
+ABOUT THE ROLE
+Nimbus Analytics is building an AI copilot for enterprise analytics. You will design, build and deploy
+NLP and LLM-powered features, from retrieval pipelines to model serving.
+
+RESPONSIBILITIES
+- Build and evaluate LLM-based features including retrieval augmented generation.
+- Train and fine-tune NLP models; own them through deployment and monitoring.
+- Collaborate with product and engineering teams.
+
+MUST HAVE
+- 3+ years of experience in machine learning engineering
+- Strong Python and SQL
+- Hands-on NLP and LLMs experience
+- PyTorch
+- Docker
+
+NICE TO HAVE
+- RAG and vector databases (FAISS, Pinecone)
+- AWS
+- MLOps (MLflow) and Kubernetes
+- FastAPI
+
+INTERVIEW PROCESS
+HR screening, technical assessment, two technical interviews, hiring manager round.

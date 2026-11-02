@@ -1,0 +1,16 @@
+Pooja Reddy
+Backend Developer
+Vizag, India | pooja.reddy@example.com | +91 90000 00197
+
+PROFESSIONAL SUMMARY
+Backend developer with 3 years of experience in Python and FastAPI. No experience with Kubernetes yet, but currently learning it. Not familiar with Kafka.
+
+SKILLS
+Python, FastAPI, PostgreSQL, Docker, REST APIs
+
+PROFESSIONAL EXPERIENCE
+Backend Developer | ByteHarbor, Vizag | Jan 2023 - Present
+- Built FastAPI microservices on PostgreSQL, deployed with Docker.
+
+EDUCATION
+B.Tech in IT, Vizag Institute of Technology | 2018 - 2022

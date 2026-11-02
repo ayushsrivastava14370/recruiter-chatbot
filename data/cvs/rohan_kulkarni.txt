@@ -1,0 +1,26 @@
+Rohan Kulkarni
+Data Scientist
+Pune, India | rohan.kulkarni@example.com | +91 90000 00103 | github.com/rohan-ds-example
+
+PROFESSIONAL SUMMARY
+Data scientist with 3 years of experience in NLP and predictive modelling. Enjoys turning messy text data into business insights.
+
+SKILLS
+Languages: Python, SQL
+ML / NLP: scikit-learn, XGBoost, NLP, text mining, Hugging Face transformers, BERT
+Data & BI: Pandas, NumPy, MySQL, Tableau, statistics, hypothesis testing
+Tools: Git
+
+PROFESSIONAL EXPERIENCE
+Data Scientist | Clearpath Insurance Analytics, Pune | Aug 2023 - Present
+- Built an NLP claim-triage model (BERT fine-tuning) that routes 60% of claims automatically.
+- Created Tableau dashboards for the claims operations team.
+
+Associate Data Scientist | Brightleaf Consulting, Pune | Jul 2021 - Jul 2023
+- Customer segmentation and propensity models using XGBoost; statistical analysis and hypothesis testing.
+
+EDUCATION
+M.Sc in Statistics, Sahyadri Institute of Statistics, Pune | 2019 - 2021
+
+CERTIFICATIONS
+- Hugging Face NLP Course (completed)
