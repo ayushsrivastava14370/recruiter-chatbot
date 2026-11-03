@@ -27,6 +27,12 @@ Edge-case files live in `data/edge_cases/`. In the app, use **Sidebar → 🧪 E
 | A16 | A CV in a **non-standard layout** or a skill **not in the taxonomy**? | With a key set, Gemini structured extraction runs, and its skills are kept **only if found in the text**. | `extractor.parse_candidate` |
 | A17 | Text in a **non-English** CV? | Gemini handles the language, but the taxonomy is English-only. This is stated as a limitation. | docs |
 | A18 | **Unrealistic experience** ("50 years")? | Clamped and flagged for manual verification. | `extractor` |
+| A19 | **How is experience calculated?** | Priority: (1) the figure the CV **states** ("4.5+ years at X", "Total experience: 6 yrs 6 months"); (2) the union of employment date ranges **to the month**, with internships excluded and education dates never counted. Gemini may only fill a gap; it **never overwrites** the CV. The source is shown under the metric. | `extractor._resolve_experience` |
+| A20 | Stated years and dates **disagree**? | The stated value is used, with a "please verify" warning that shows both numbers. | `extractor._resolve_experience` |
+| A21 | Date formats like `07/2021`, `2021-07`, `Jul'21`, "Till date"? | All supported, with month precision. Year-only "2015–2018" = 3 years. | `extractor._parse_month` · `tests/test_experience_and_formats.py` |
+| A22 | **Design-template CVs** with letter-spaced headings (`P R O F E S S I O N A L`)? | Re-joined and re-segmented into real words before section detection. ALL-CAPS names are normalised. | `parser._fix_letter_spacing` |
+| A23 | The CV never literally says "NLP" but describes RAG / LLM systems? | **Implied skills** (RAG → LLMs → NLP, PyTorch → Deep Learning…) are credited at 80% and labelled "implied", so the inference is visible. | `skills.SKILL_IMPLICATIONS` |
+| A24 | The recruiter wants to **re-analyse or delete** a CV? | Uploading the same file name again replaces the old profile. Candidate Insights → 🗑️ Delete. Data tab → remove several at once. | `workspace.add_candidate_text` |
 
 ## B. Matching & ranking
 
@@ -93,6 +99,6 @@ Edge-case files live in `data/edge_cases/`. In the app, use **Sidebar → 🧪 E
 | Question | Answer |
 |---|---|
 | How does it scale to 10k CVs? | Swap the NumPy cosine store for FAISS or pgvector (one class). Batch-embed on upload with a persistent store. Rank with a two-stage retrieve-then-score. |
-| How is it tested? | 48 offline pytest tests (parsing, every edge case, every security control, routing, ranking order). They run without an API key. |
+| How is it tested? | 69 offline pytest tests (parsing, every edge case, every security control, routing, ranking order). They run without an API key. |
 | How would you evaluate quality? | A labelled set of CV-JD pairs (precision@k against recruiter shortlists); RAGAS-style faithfulness and answer relevance for Q&A; LLM-as-judge with human spot checks. |
 | What would you do next? | OCR, ATS integration, a persistent DB with authentication and audit logs, bias audits (score parity across synthetic demographic variants), and Gmail sending after approval. |

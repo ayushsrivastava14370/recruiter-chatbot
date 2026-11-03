@@ -335,6 +335,9 @@ with tab_rank:
                 a.markdown("**✅ Matched nice-to-have**<br>" + chips(r.matched_nice, "ok", "✓ "), unsafe_allow_html=True)
                 b.markdown("**❌ Missing must-have**<br>" + chips(r.missing_must, "miss", "✗ "), unsafe_allow_html=True)
                 b.markdown("**➖ Missing nice-to-have**<br>" + chips(r.missing_nice, "miss", "✗ "), unsafe_allow_html=True)
+                if r.implied:
+                    st.markdown("**💡 Implied (inferred from more specific skills, 80% credit)**<br>"
+                                + chips(r.implied, "warn"), unsafe_allow_html=True)
                 if r.listed_only:
                     st.markdown("**🔎 Listed only (no supporting experience - verify in interview, 70% credit)**<br>"
                                 + chips(r.listed_only, "warn"), unsafe_allow_html=True)
@@ -363,16 +366,26 @@ with tab_cand:
             st.warning(w_)
         m1, m2, m3, m4 = st.columns(4)
         m1.metric("Match score", f"{match.total_score:.0f}/100" if match else "-")
-        m2.metric("Experience", f"{cand.years_experience:g} yrs")
+        m2.metric("Experience", f"{cand.years_experience:g} yrs", help=f"How this was determined: {cand.experience_source or 'n/a'}")
         m3.metric("Skills detected", len(cand.skills))
         m4.metric("Must-have gaps", len(match.missing_must) if match else "-")
         st.markdown(f"**{escape_html(cand.current_title)}** · {escape_html(cand.location)} · {escape_html(cand.email)}  \n"
                     f"_Parsed with: {cand.parsed_with} · source: {escape_html(cand.source_file)}_", unsafe_allow_html=True)
         if cand.education:
             st.markdown("🎓 " + " · ".join(escape_html(e) for e in cand.education), unsafe_allow_html=True)
+        st.caption(f"Experience source: {cand.experience_source or 'n/a'}")
         st.markdown(chips(cand.skills), unsafe_allow_html=True)
+        if cand.implied_skills:
+            st.markdown("**Implied skills** (inferred from more specific ones, 80% credit): " + chips(cand.implied_skills, "warn"),
+                        unsafe_allow_html=True)
         if cand.listed_only_skills:
             st.caption("Listed only in the skills section (no supporting experience): " + ", ".join(cand.listed_only_skills))
+        if st.button(f"🗑️ Delete {cand.name} from this session", key=f"del_{cid}"):
+            ws.remove_candidate(cid)
+            for k in [k for k in st.session_state if k.startswith((f"sum_{cid}_", f"q_{cid}_"))]:
+                del st.session_state[k]
+            st.success(f"Deleted {cand.name}. Upload the CV again from the sidebar to re-analyse it.")
+            st.rerun()
 
         pipe = ws.pipeline[ws.pipeline["candidate_name"] == cand.name] if not ws.pipeline.empty else pd.DataFrame()
         if not pipe.empty:

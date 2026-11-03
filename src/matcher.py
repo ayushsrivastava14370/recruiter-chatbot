@@ -23,6 +23,7 @@ from .llm import GeminiClient
 from .skills import skill_in_text
 
 LISTED_ONLY_CREDIT = 0.7  # credit for a skill that appears only in a skills list, with no supporting evidence
+IMPLIED_CREDIT = 0.8  # credit for a skill implied by a more specific one (e.g. RAG -> NLP)
 
 # cosine ranges used to calibrate raw similarity into 0..1 per backend
 _CALIBRATION = {"gemini": (0.55, 0.85), "tfidf": (0.0, 0.35)}
@@ -47,6 +48,7 @@ class MatchResult(BaseModel):
     extra_skills: list[str] = Field(default_factory=list)
     recommendation: str = ""
     listed_only: list[str] = Field(default_factory=list)  # matched, but only in a skills list (verify in interview)
+    implied: list[str] = Field(default_factory=list)  # matched via an implying skill (e.g. RAG -> NLP)
     flags: list[str] = Field(default_factory=list)  # parsing / integrity warnings for this candidate
 
     def explanation(self) -> str:
@@ -70,7 +72,11 @@ def _recommendation(score: float, missing_must: int) -> str:
 
 
 def _has(skill: str, cand: CandidateProfile) -> bool:
-    return skill in cand.skills or skill_in_text(skill, cand.text)
+    return skill in cand.skills or skill_in_text(skill, cand.text) or skill in cand.implied_skills
+
+
+def _is_implied(skill: str, cand: CandidateProfile) -> bool:
+    return skill in cand.implied_skills and skill not in cand.skills and not skill_in_text(skill, cand.text)
 
 
 def rank_candidates(
@@ -107,7 +113,10 @@ def rank_candidates(
         # Evidence-weighted coverage: a skill backed by experience/projects earns full credit; a skill that
         # only appears in a bare skills list earns LISTED_ONLY_CREDIT (counters keyword stuffing).
         listed_only = set(cand.listed_only_skills)
-        credit = lambda s: LISTED_ONLY_CREDIT if s in listed_only else 1.0  # noqa: E731
+        def credit(s: str) -> float:
+            if _is_implied(s, cand):
+                return IMPLIED_CREDIT
+            return LISTED_ONLY_CREDIT if s in listed_only else 1.0
         denom = 2 * len(job.must_have) + len(job.nice_to_have)
         earned = 2 * sum(credit(s) for s in matched_must) + sum(credit(s) for s in matched_nice)
         skill_score = earned / denom if denom else 0.0
@@ -135,6 +144,7 @@ def rank_candidates(
                 extra_skills=[s for s in cand.skills if s not in jd_skills][:10],
                 recommendation=_recommendation(total, len(missing_must)),
                 listed_only=[s for s in matched_must + matched_nice if s in cand.listed_only_skills],
+                implied=[s for s in matched_must + matched_nice if _is_implied(s, cand)],
                 flags=list(cand.warnings),
             )
         )

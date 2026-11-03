@@ -47,7 +47,7 @@ streamlit run app.py
 The app opens at <http://localhost:8501>. Sample data loads automatically.
 Windows users can double-click **`run.bat`** instead. macOS/Linux users can run `bash run.sh`.
 
-**Run tests (offline, no key needed):** `pytest -q` (48 tests)
+**Run tests (offline, no key needed):** `pytest -q` (69 tests)
 
 **Live demo:** see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) to host it free on Streamlit Community Cloud.
 
@@ -121,7 +121,7 @@ recruiter-chatbot/
 │   ├── policies/              # hiring process & recruiter FAQ
 │   └── pipeline.csv           # recruitment tracker (stage, dates, notice, CTC, notes)
 ├── scripts/generate_sample_data.py
-├── tests/                     # 48 offline tests (core + security/edge cases)
+├── tests/                     # 69 offline tests (core + security/edge cases)
 ├── docs/
 │   ├── APPROACH.md            # technical approach & model selection
 │   ├── INTERVIEW_QA.md        # every 'what if...?' with answer + code location

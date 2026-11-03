@@ -66,11 +66,22 @@ class Workspace:
         return hashlib.sha256(re.sub(r"\s+", " ", text.lower()).strip().encode()).hexdigest()
 
     def add_candidate_text(self, text: str, filename: str, use_llm: bool = False) -> CandidateProfile:
+        # Re-uploading the SAME file name = "re-analyse": the old profile is replaced (e.g. after a parser fix).
+        reanalysed = next((c for c in self.candidates.values() if c.source_file == filename), None)
+        if reanalysed:
+            self.candidates.pop(reanalysed.id)
         fp = self._fingerprint(text)
-        for c in self.candidates.values():  # exact duplicate (same content, any filename)
-            if self._fingerprint(c.text) == fp:
-                raise DocumentError(f"'{filename}' is a duplicate of the CV already loaded for {c.name} - skipped.")
+        for c in self.candidates.values():  # exact duplicate under a DIFFERENT file name
+            if self._fingerprint(c.raw_text or c.text) == fp or self._fingerprint(c.text) == fp:
+                raise DocumentError(f"'{filename}' is a duplicate of the CV already loaded for {c.name} - skipped. "
+                                    "(To re-analyse a CV, upload it again with its original file name.)")
         profile = parse_candidate(text, filename, self.llm, use_llm)
+        if reanalysed:
+            profile.id = reanalysed.id
+            profile.warnings.append(f"Re-analysed: replaced the earlier profile from '{filename}'.")
+            self.candidates[profile.id] = profile
+            self.invalidate()
+            return profile
         # Same person re-applying with an updated CV (same email) -> replace the old version
         same = next((c for c in self.candidates.values() if profile.email and c.email.lower() == profile.email.lower()), None)
         if same:

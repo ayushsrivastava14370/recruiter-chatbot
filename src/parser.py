@@ -33,10 +33,47 @@ class DocumentError(ValueError):
 UnsupportedFileError = DocumentError  # backwards compatible alias
 
 
+# Words that appear in CV / JD section headings - used to re-segment letter-spaced headings.
+_HEADING_WORDS = sorted({
+    "professional", "summary", "technical", "skills", "skill", "experience", "work", "history", "employment",
+    "education", "academic", "academics", "qualifications", "qualification", "projects", "project", "certifications",
+    "certification", "achievements", "achievement", "awards", "award", "recognition", "honors", "honours", "profile",
+    "career", "objective", "key", "core", "competencies", "languages", "interests", "personal", "details", "contact",
+    "publications", "volunteering", "leadership", "activities", "extracurricular", "courses", "training", "internships",
+    "internship", "and", "of", "about", "me", "requirements", "responsibilities", "nice", "to", "have", "must", "preferred",
+    "highlights", "strengths", "tools", "technologies", "relevant", "selected", "other", "additional", "information",
+}, key=len, reverse=True)
+
+
+def _segment_heading(collapsed: str) -> str | None:
+    """'PROFESSIONALEXPERIENCE' -> 'PROFESSIONAL EXPERIENCE' using the heading vocabulary (None if not possible)."""
+    s, out = collapsed.lower(), []
+    while s:
+        if s[0] in "&/-":
+            out.append(s[0]); s = s[1:]; continue
+        word = next((w for w in _HEADING_WORDS if s.startswith(w)), None)
+        if not word:
+            return None
+        out.append(word); s = s[len(word):]
+    return " ".join(out).upper()
+
+
+def _fix_letter_spacing(line: str) -> str:
+    """Design templates often render headings as 'P R O F E S S I O N A L  S U M M A R Y'.
+    Text extraction then yields single letters separated by spaces, which breaks section detection."""
+    stripped = line.strip()
+    tokens = stripped.split(" ")
+    if len(tokens) >= 4 and sum(len(t) == 1 for t in tokens) / len(tokens) >= 0.8:
+        collapsed = "".join(tokens)
+        return _segment_heading(collapsed) or collapsed
+    return line
+
+
 def _clean(text: str) -> str:
     text = text.replace("\x00", " ").replace("\r\n", "\n").replace("\r", "\n")
     text = re.sub(r"[​-‏﻿]", "", text)  # zero-width chars (often used to hide text)
     text = re.sub(r"[ \t]+", " ", text)
+    text = "\n".join(_fix_letter_spacing(ln) for ln in text.split("\n"))
     text = re.sub(r"\n{3,}", "\n\n", text)
     return text.strip()
 
