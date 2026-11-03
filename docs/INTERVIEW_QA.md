@@ -75,7 +75,7 @@ Edge-case files live in `data/edge_cases/`. In the app, use **Sidebar → 🧪 E
 | D6 | **Malicious files** (zip bomb, fake extension, huge PDF) | See A3 and A6. pypdf is pure Python and doesn't execute PDF JavaScript. |
 | D7 | **Discrimination** ("only female candidates", "who is youngest") | Refused with an explanation. Legitimate policy questions ("maternity leave policy") are allowed. |
 | D8 | **PII leakage to third parties** | Emails and phones masked (`[EMAIL]`, `[PHONE]`) before text goes to Gemini. Only synthetic data is used. For real data: paid tier or Vertex AI, which has data-processing terms and doesn't train on your data. |
-| D9 | **Abuse of the public demo / API quota** | Per-session rate limit (15 AI requests per minute), a 2,000-character message cap, and an optional access code (`APP_PASSWORD`) compared in constant time with an attempt limit. |
+| D9 | **Abuse of the public demo / API quota** | Per-session rate limit (30 AI requests per minute), a 2,000-character message cap, and an optional access code (`APP_PASSWORD`) compared in constant time with an attempt limit. |
 | D10 | **Unsafe automated actions** | Human in the loop: emails are drafted, **never sent**. Stage-conflict warnings, e.g. a rejection to someone at the Offer stage. |
 | D11 | **Session isolation** on the hosted app | Uploads live only in that user's Streamlit session memory and are never written to disk. |
 
@@ -93,12 +93,18 @@ Edge-case files live in `data/edge_cases/`. In the app, use **Sidebar → 🧪 E
 | E8 | Asked for something **not in the data**? | The exact refusal sentence, so it doesn't invent an answer. |
 | E9 | **Empty or huge message**? | Handled (empty → prompt; capped at 2,000 characters). |
 | E10 | Rejection email to someone at the **Offer stage**? | A warning appears before the draft. Past dates, weekend dates and bad links are also flagged. |
+| E11 | **"Candidates with 4.5 years"**, "more than 5 years", "who knows RAG in Pune"? | A **structured filter** over every profile, including uploads. It's deterministic and complete, and shows the closest matches if none is exact. *Lesson learned:* RAG's top-k similarity search is the wrong tool for filters, because it can miss the matching CV entirely. |
+| E12 | **"Does Aarav know PyTorch?"**, "How many years does X have?", "X's gaps for ML", "Neha's stage / CTC"? | **Candidate facts** come straight from the parsed profile, the match analysis or the pipeline row, labelled with how each was determined (backed by experience / listed only / implied). |
+| E13 | **"Who is at Technical Interview?"**, "90-day notice", "came from referrals", "how many candidates"? | **Exact pipeline filters and counts**, checking every row. Policy questions ("assessment pass mark") are not hijacked; they go to RAG. |
+| E14 | An **uploaded CV** isn't in the pipeline tracker? | Stage, CTC and notice questions say so explicitly. The profile is still searchable, rankable and summarisable. |
+| E15 | **"hi"**, or off-topic ("write a poem")? | A help menu with examples, or a polite decline, without any LLM call. |
+| E16 | **Order of decisions** in the chat? | Guardrails → greeting / off-topic → structured filters → pipeline filters / counts → candidate facts → actions (rank, summary, questions, email, compare) → RAG for everything open-ended. Gemini also always receives a full candidate directory and the pipeline table. |
 
 ## F. Engineering & scale
 
 | Question | Answer |
 |---|---|
 | How does it scale to 10k CVs? | Swap the NumPy cosine store for FAISS or pgvector (one class). Batch-embed on upload with a persistent store. Rank with a two-stage retrieve-then-score. |
-| How is it tested? | 69 offline pytest tests (parsing, every edge case, every security control, routing, ranking order). They run without an API key. |
+| How is it tested? | 98 offline pytest tests (parsing, every edge case, every security control, routing, ranking order). They run without an API key. |
 | How would you evaluate quality? | A labelled set of CV-JD pairs (precision@k against recruiter shortlists); RAGAS-style faithfulness and answer relevance for Q&A; LLM-as-judge with human spot checks. |
 | What would you do next? | OCR, ATS integration, a persistent DB with authentication and audit logs, bias audits (score parity across synthetic demographic variants), and Gmail sending after approval. |

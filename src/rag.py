@@ -28,7 +28,8 @@ NOT_FOUND = "I could not find this in the supplied recruitment data."
 SYSTEM_PROMPT = f"""You are RecruitAI, an assistant for recruiters.
 Rules:
 - Answer ONLY using the CONTEXT provided (candidate CVs, job descriptions, hiring policies, pipeline tracker).
-- Cite the sources you used inline as [S1], [S2] or [PIPELINE].
+- Cite the sources you used inline as [S1], [S2], [PIPELINE] or [CANDIDATES].
+- The [CANDIDATES] directory lists EVERY candidate with title, years of experience, location and skills: use it for filtering, counting or listing candidates (e.g. by experience or skill). The [PIPELINE] table covers application stage, dates, notice period and CTC; a candidate may be in one table but not the other.
 - If the answer is not in the context, reply exactly: "{NOT_FOUND}" and optionally suggest what data would help.
 - Never invent candidates, dates, skills, salaries or numbers. When counting, count carefully from the pipeline table.
 - Be concise and use bullet points or small tables where helpful.
@@ -62,6 +63,25 @@ class RAGAnswer:
     sources: list[tuple[str, Chunk, float]] = field(default_factory=list)  # (label, chunk, score)
     grounded: bool = True
     mode: str = "gemini"
+
+
+# Recruiter vocabulary differs from document vocabulary ("salary" vs "Compensation bands").
+# Expanding the query helps both TF-IDF (exact words) and embeddings.
+QUERY_SYNONYMS = {
+    r"\bsalar(y|ies)\b|\bpay\b|\bpackage\b": "compensation CTC band LPA",
+    r"\bctc\b": "compensation salary band",
+    r"\bprocess\b|\brounds?\b": "interview stages",
+    r"\bpass(ing)? (mark|score|criteria)\b|\bcut-?off\b": "assessment pass mark",
+    r"\bjoin(ing)?\b": "notice period",
+    r"\bhiring manager\b|\bpanel\b|\binterviewers?\b": "interview panel hiring manager",
+    r"\bapprov\w*\b": "approved offers HR business partner",
+    r"\breferr\w*\b": "referral bonus programme",
+}
+
+
+def expand_query(query: str) -> str:
+    extra = [v for pat, v in QUERY_SYNONYMS.items() if re.search(pat, query, re.IGNORECASE)]
+    return f"{query} {' '.join(extra)}" if extra else query
 
 
 def chunk_text(text: str, size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) -> list[str]:
@@ -100,6 +120,7 @@ class RecruitmentIndex:
     def search(self, query: str, k: int = TOP_K) -> list[tuple[Chunk, float]]:
         if not self.chunks:
             return []
+        query = expand_query(query)
         try:
             q = self.embedder.transform_query(query)
         except LLMError:
@@ -116,14 +137,17 @@ class RecruitmentIndex:
             return ""
         return self.pipeline.to_markdown(index=False) if _has_tabulate() else self.pipeline.to_csv(index=False)
 
-    def answer(self, question: str, history: list[dict] | None = None, extra_context: str = "") -> RAGAnswer:
+    def answer(self, question: str, history: list[dict] | None = None, extra_context: str = "", directory: str = "") -> RAGAnswer:
         hits = self.search(question)
         labelled = [(f"S{i}", c, s) for i, (c, s) in enumerate(hits, 1)]
 
         if not (self.llm and self.llm.available):
-            if not hits:
-                return RAGAnswer(NOT_FOUND, [], grounded=False, mode="offline")
-            lines = ["**Offline mode** (no Gemini key) - here are the most relevant passages from your data:\n"]
+            # TF-IDF similarity below this means no real word overlap -> nothing relevant (e.g. "write a poem")
+            if not hits or hits[0][1] < 0.08:
+                return RAGAnswer(NOT_FOUND + " I can help with ranking, candidate facts, pipeline status, summaries, "
+                                 "interview questions, emails and hiring policies.", [], grounded=False, mode="offline")
+            lines = ["**Offline mode** (no Gemini key) - I can't compose a full answer, but these are the most relevant "
+                     "passages from your data (they may or may not contain the answer):\n"]
             for label, c, s in labelled[:3]:
                 snippet = c.text.split("\n", 1)[-1][:350].replace("\n", " ")
                 lines.append(f"- **[{label}] {c.doc.title}** - {snippet}...")
@@ -133,6 +157,8 @@ class RecruitmentIndex:
             f"[{label}] " + wrap_document(c.doc.doc_type, c.doc.source or c.doc.title, redact_pii(c.text) if REDACT_PII else c.text)
             for label, c, _ in labelled
         )
+        if directory:  # structured overview of EVERY candidate - top-k retrieval alone can miss people
+            context += f"\n\n[CANDIDATES] Directory of all candidates (parsed profiles):\n{directory}"
         table = self._pipeline_table()
         if table:
             context += f"\n\n[PIPELINE] Recruitment pipeline tracker (complete table):\n{table}"
@@ -154,10 +180,10 @@ class RecruitmentIndex:
 
         refused = NOT_FOUND.lower()[:30] in text.lower()
         # Citation check: every factual answer must cite at least one real source label.
-        valid = {lbl for lbl, _, _ in labelled} | {"PIPELINE", "RANKING"}
+        valid = {lbl for lbl, _, _ in labelled} | {"PIPELINE", "RANKING", "CANDIDATES"}
         # citations may be grouped: [S1], [S2, S4], [S3, PIPELINE]
         cited = {tok.strip() for grp in re.findall(r"\[([^\]]{1,60})\]", text) for tok in grp.split(",")
-                 if re.fullmatch(r"S\d+|PIPELINE|RANKING", tok.strip())}
+                 if re.fullmatch(r"S\d+|PIPELINE|RANKING|CANDIDATES", tok.strip())}
         invalid = cited - valid
         if invalid:
             text += f"\n\n_⚠️ Answer cites unknown source label(s) {', '.join(sorted(invalid))} - please verify._"

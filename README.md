@@ -16,7 +16,7 @@ All sample data is **synthetic**. No real personal information is used.
 | Summaries & interview questions | Gemini writes recruiter-ready summaries and 8 tailored questions (technical, skill-gap probes, scenario, behavioural), each with its rationale and the signals of a good answer. |
 | Recruitment emails | Interview invites, assessment instructions, shortlist updates, offer calls and rejections. Logistics (date, time, link) are injected **verbatim**, so the model can't invent them. The drafts are editable and downloadable. |
 | Recruitment Q&A | RAG over CVs, JDs, hiring policies and the pipeline tracker. Answers **cite sources** `[S1]`, `[PIPELINE]` and say *"I could not find this in the supplied recruitment data"* when the data doesn't contain the answer. |
-| Chatbot | One chat box handles everything ("rank top 5 for the ML role", "draft an invite for Ananya", "who has a 90-day notice period?"). |
+| Chatbot | One chat box handles everything. **Exact questions get exact answers** from structured data: filters ("candidates with 4.5 years", "who knows RAG and Docker in Pune"), candidate facts ("does Aarav know PyTorch?", "Neha's stage?"), pipeline filters ("90-day notice", "who is at Technical Interview") and counts. Open-ended questions (policies, process) go to grounded RAG with citations. |
 | Works offline | No API key? Ranking, gap analysis, retrieval (TF-IDF) and template emails/questions still work. |
 | 🛡️ Secure by design | Prompt-injection defence (hidden text in CVs is stripped and flagged), jailbreak refusal, output sanitising, PII masking, discrimination guardrails, blind screening, upload hardening, rate limiting, optional access code. See the **Security** tab and [docs/INTERVIEW_QA.md](docs/INTERVIEW_QA.md). |
 | 🧪 Edge cases | Scanned/password-protected/corrupt/empty/duplicate files, JD-in-CV-box, negated skills, keyword stuffing, typos, ambiguous names: one-click demo in the sidebar. |
@@ -47,7 +47,7 @@ streamlit run app.py
 The app opens at <http://localhost:8501>. Sample data loads automatically.
 Windows users can double-click **`run.bat`** instead. macOS/Linux users can run `bash run.sh`.
 
-**Run tests (offline, no key needed):** `pytest -q` (69 tests)
+**Run tests (offline, no key needed):** `pytest -q` (98 tests)
 
 **Live demo:** see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) to host it free on Streamlit Community Cloud.
 
@@ -121,7 +121,7 @@ recruiter-chatbot/
 │   ├── policies/              # hiring process & recruiter FAQ
 │   └── pipeline.csv           # recruitment tracker (stage, dates, notice, CTC, notes)
 ├── scripts/generate_sample_data.py
-├── tests/                     # 69 offline tests (core + security/edge cases)
+├── tests/                     # 98 offline tests (core + security/edge cases)
 ├── docs/
 │   ├── APPROACH.md            # technical approach & model selection
 │   ├── INTERVIEW_QA.md        # every 'what if...?' with answer + code location

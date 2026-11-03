@@ -18,7 +18,7 @@ The result is a public URL like `https://recruitai-<you>.streamlit.app`, so revi
    APP_PASSWORD = "choose-a-code"
    # Optional
    GEMINI_MODEL = "gemini-flash-lite-latest"
-   RATE_LIMIT_PER_MIN = "15"
+   RATE_LIMIT_PER_MIN = "30"
    ```
 5. Click **Deploy**. The first build takes about 3 to 5 minutes while it installs `requirements.txt`.
 

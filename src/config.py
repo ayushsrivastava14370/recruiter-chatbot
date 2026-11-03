@@ -52,7 +52,7 @@ REDACT_PII = _secret("REDACT_PII", "true").lower() != "false"
 
 # Security: optional access code for the hosted demo, per-session LLM rate limit, upload limits
 APP_PASSWORD = _secret("APP_PASSWORD", "")
-RATE_LIMIT_PER_MIN = int(_secret("RATE_LIMIT_PER_MIN", "15") or 15)
+RATE_LIMIT_PER_MIN = int(_secret("RATE_LIMIT_PER_MIN", "30") or 30)
 MAX_UPLOAD_FILES = 20
 
 # RAG settings

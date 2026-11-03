@@ -366,8 +366,8 @@ def parse_candidate(text: str, source_file: str = "", llm: GeminiClient | None =
     if data.name and profile.name == "Unknown Candidate":
         profile.name = data.name
         profile.id = slugify(data.name)
-    profile.current_title = data.current_title or profile.current_title
-    profile.location = data.location or profile.location
+    profile.current_title = profile.current_title or data.current_title or ""  # the CV's own title line wins
+    profile.location = profile.location or data.location or ""
     # Experience: the LLM may only FILL A GAP, never overwrite a value stated in the CV or computed from dates.
     llm_years = data.years_experience
     if llm_years is not None and 0 <= llm_years <= 50:

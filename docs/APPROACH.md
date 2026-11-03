@@ -55,7 +55,7 @@ A lightweight router (regex intents + RapidFuzz entity matching on candidate nam
 ## 5. Reliability engineering
 - Disk cache for all LLM and embedding calls (SHA-256 of model + prompt), which makes repeat demos instant and deterministic.
 - Exponential backoff on 429/5xx errors, plus automatic fallback across free Gemini models.
-- 69 offline pytest tests: parsing of every file format, every edge-case file, every security control, skill extraction (negation, boundaries), expected top candidates per role, gap reporting, retrieval, intent routing and the end-to-end assistant.
+- 98 offline pytest tests: parsing of every file format, every edge-case file, every security control, skill extraction (negation, boundaries), expected top candidates per role, gap reporting, retrieval, intent routing and the end-to-end assistant.
 
 ## 6. Security
 See `docs/INTERVIEW_QA.md` section D and the in-app 🛡️ Security tab. In short: injected instructions in CVs are detected and **stripped before scoring**; documents are fenced as untrusted data; jailbreaks are refused before any LLM call; model output is sanitised against exfiltration and XSS; PII is masked before it leaves the machine; uploads are validated (magic bytes, size, pages, zip bombs); and there is per-session rate limiting plus an optional access code.

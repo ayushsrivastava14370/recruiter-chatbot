@@ -14,6 +14,8 @@ from typing import Any
 
 from .generator import EMAIL_TYPES, candidate_summary, draft_email, interview_questions, stage_conflict
 from .guardrails import JAILBREAK_REFUSAL, check_protected_query, detect_jailbreak, protected_refusal
+from .facts import GREETING_RE, HELP_TEXT, OFF_TOPIC_REPLY, candidate_fact, count_query, is_off_topic, pipeline_query
+from .search import Criteria, format_results, parse_criteria, search_candidates
 from .workspace import Workspace
 
 STOPWORDS = {"draft", "write", "send", "generate", "summarise", "summarize", "create", "rank", "interview", "email", "invite",
@@ -86,6 +88,12 @@ class RecruiterAssistant:
         if (category := check_protected_query(message)):
             return AssistantReply(protected_refusal(category), "guardrail", {"security_event": f"Discriminatory request blocked ({category})"})
 
+        # Small talk / help and exact counts never need retrieval
+        if GREETING_RE.match(message):
+            return AssistantReply(HELP_TEXT, "help")
+        if is_off_topic(message, ws):
+            return AssistantReply(OFF_TOPIC_REPLY, "off_topic")
+
         intent = detect_intent(message)
         job = self._job(message, active_job_id)
 
@@ -104,6 +112,26 @@ class RecruiterAssistant:
                     cand = ws.candidates[m["candidate_id"]]
                     break
 
+        # Structured filters ("candidates with 4.5 years", "who knows RAG", "more than 5 yrs in Pune") are answered
+        # deterministically over ALL profiles - semantic top-k retrieval could miss a matching CV.
+        criteria = parse_criteria(message, ws.known_cities())
+        if criteria and cand is None and intent in ("qa", "summary"):
+            matches, closest = search_candidates(list(ws.candidates.values()), criteria)
+            payload = {"candidate_id": matches[0][0].id} if len(matches) == 1 else {}
+            return AssistantReply(format_results(criteria, matches, closest, len(ws.candidates)), "filter", payload)
+
+        # Exact pipeline filters ("who is at Technical Interview stage", "90-day notice", "came from referrals")
+        if cand is None and intent in ("qa", "summary"):
+            if (piped := pipeline_query(message, ws)):
+                return AssistantReply(piped, "pipeline")
+            if (counted := count_query(message, ws)):  # after filters: "how many at Offer stage" is a filter, not a total
+                return AssistantReply(counted, "count")
+
+        # Exact facts about one candidate ("how many years does Ayush have", "does Aarav know PyTorch", "Neha's stage")
+        if cand is not None and intent == "qa":
+            if (fact := candidate_fact(message, cand, ws, job, self.weights)):
+                return AssistantReply(fact, "fact", {"candidate_id": cand.id})
+
         if intent == "rank":
             if not job:
                 return AssistantReply("Which role should I rank candidates for? Available: " + ", ".join(j.title for j in ws.jobs.values()), "rank")
@@ -111,8 +139,17 @@ class RecruiterAssistant:
                 return AssistantReply("There are no candidates loaded yet - upload some CVs first.", "rank")
             n = int(m.group(1)) if (m := re.search(r"top (\d+)", message.lower())) else 5
             n = max(1, min(n, len(ws.candidates)))
-            results = ws.rank(job.id, self.weights)[:n]
-            lines = [f"### Top {len(results)} candidates for **{job.title}**\n",
+            results = ws.rank(job.id, self.weights)
+            crit_note = ""
+            if criteria and (criteria.has_years or criteria.locations):  # e.g. "rank candidates with 3+ years"
+                allowed = {c.id for c, _ in search_candidates(list(ws.candidates.values()),
+                                                              Criteria(**{**criteria.__dict__, "skills": []}))[0]}
+                results = [r for r in results if r.candidate_id in allowed]
+                crit_note = f" (filtered: {Criteria(**{**criteria.__dict__, 'skills': []}).describe()})"
+            results = results[:n]
+            if not results:
+                return AssistantReply(f"No candidates match the filter{crit_note} for {job.title}.", "rank")
+            lines = [f"### Top {len(results)} candidates for **{job.title}**{crit_note}\n",
                      "| # | Candidate | Score | Matched must-haves | Gaps (must-have) | Recommendation |",
                      "|---|---|---|---|---|---|"]
             for r in results:
@@ -127,9 +164,17 @@ class RecruiterAssistant:
 
         if intent in ("summary", "questions", "email") and cand is None:
             names = ", ".join(c.name for c in list(ws.candidates.values())[:15])
-            unknown = re.findall(r"\b([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\b", message)
-            unknown = [u for u in unknown if u.lower() not in STOPWORDS and not ws.find_job(u, 90)]
-            prefix = f"I couldn't find a candidate called **{unknown[-1]}** in the data. " if unknown else "Which candidate do you mean? "
+            # Capitalised words that are not command words/role words -> the name the user typed ("John Smith")
+            words = re.findall(r"[A-Za-z][a-z'’]+|[A-Z]{2,}", message)
+            groups, cur = [], []
+            for w in words:
+                if w[0].isupper() and w.lower() not in STOPWORDS and not ws.find_job(w, 90):
+                    cur.append(w)
+                elif cur:
+                    groups.append(" ".join(cur)); cur = []
+            if cur:
+                groups.append(" ".join(cur))
+            prefix = f"I couldn't find a candidate called **{groups[-1]}** in the data. " if groups else "Which candidate do you mean? "
             return AssistantReply(f"{prefix}Available candidates: {names}.", intent)
 
         match = ws.match_for(job.id, cand.id, self.weights) if (job and cand) else None
@@ -176,7 +221,7 @@ class RecruiterAssistant:
         extra = ""
         if job and re.search(r"\b(fit|match|best|score|rank|suitable)", message.lower()):
             extra = "\n".join(r.explanation() for r in ws.rank(job.id, self.weights)[:8])
-        ans = ws.index.answer(message, history, extra_context=extra)
+        ans = ws.index.answer(message, history, extra_context=extra, directory=ws.candidate_directory())
         payload = {"sources": [(lbl, c.doc.title, c.doc.doc_type, round(s, 3), c.text) for lbl, c, s in ans.sources]}
         if cand:
             payload["candidate_id"] = cand.id

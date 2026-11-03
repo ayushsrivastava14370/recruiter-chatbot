@@ -175,6 +175,17 @@ class Workspace:
         top = max(s for s, _ in scored)
         return [c for s, c in sorted(scored, key=lambda x: -x[0]) if s == top]
 
+    def known_cities(self) -> list[str]:
+        return sorted({c.location.split(",")[0].strip() for c in self.candidates.values() if c.location})
+
+    def candidate_directory(self) -> str:
+        """Compact table of every candidate, always given to the LLM for Q&A (complete, unlike top-k retrieval)."""
+        rows = ["| Candidate | Current title | Years of experience | Location | Skills (incl. implied) |", "|---|---|---|---|---|"]
+        for c in self.candidates.values():
+            skills = ", ".join(c.skills[:25] + [f"{s} (implied)" for s in c.implied_skills])
+            rows.append(f"| {c.name} | {c.current_title} | {c.years_experience:g} | {c.location} | {skills} |")
+        return "\n".join(rows)
+
     def pipeline_stage(self, name: str) -> str | None:
         if self.pipeline.empty or "candidate_name" not in self.pipeline:
             return None

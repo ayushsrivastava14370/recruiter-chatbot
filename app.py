@@ -544,7 +544,7 @@ with tab_about:
 | **Summaries & questions** | Gemini prompted with the CV, JD and the computed match analysis; questions target strengths *and* gaps. |
 | **Emails** | Gemini drafts with recruiter-supplied logistics injected verbatim; date/link validation; stage-conflict warnings; template fallback. |
 | **Q&A** | RAG: chunk → embed → top-{config.TOP_K} retrieval + full pipeline table → Gemini answers **only from context with [S#] citations**, otherwise says it cannot find it. |
-| **Chat routing** | Guardrails (jailbreak, discrimination) → regex intents + fuzzy name/role matching (typos, ambiguity, pronouns) → the right tool. |
+| **Chat routing** | Guardrails (jailbreak, discrimination) → **exact answers from structured data** (filters by experience/skills/location, candidate facts, pipeline filters, counts) → actions (rank, summary, questions, email, compare) → RAG for open-ended questions. Fuzzy name/role matching handles typos, abbreviations, ambiguity and pronouns. |
 | **Resilience** | Disk cache, model failover on 503/504/429/404, busy-model cooldown, offline mode, OS certificate store (corporate proxies). |
 
 **Current mode:** {"Gemini · " + llm.model if llm.available else "Offline (no API key)"}
